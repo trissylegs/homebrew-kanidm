@@ -15,7 +15,7 @@ class Kanidm < Formula
   depends_on "rust" => :build
 
   def install
-    system "cargo", "install", "--bin", "kanidm", "--path", "tools", "--locked", "--root", *prefix
+    system "cargo", "install", "--bin", "kanidm", "--path", "tools/cli", "--locked", "--root", *prefix
 
     # Completion scripts and manpage are generated in the crate's build
     # directory, which includes a fingerprint hash. Try to locate it first
