@@ -7,7 +7,7 @@ set -e
 
 # get_latest_release from here https://gist.github.com/lukechilds/a83e1d7127b78fef38c2914c4ececc3c
 get_latest_release() {
-  curl -L --silent "$1" | grep -E '"(tag_name|name)\"' | head -n1 | sed -E 's/.*\"([^\"]+)\",/\1/'
+  curl -L --silent "$1" | jq -r '.[] | select(.tag_name != "debs") | limit(1; .) | .tag_name' | head -n1
 }
 
 SPECFILE=$(find "$(pwd)" -type f -name '*.rb' | head -n1)
@@ -38,7 +38,12 @@ else
     # echo "::set-env name=LATEST::${LATEST}"
     echo "Latest version ${LATEST}"
 fi
-CURRENT=$(grep -E 'version \"+' "${SPECFILE}" | awk '{print $NF}' | tr -d '"')
+CURRENT=$(grep -E 'url \"+' "${SPECFILE}" | awk '{print $NF}' | tr -d '"')
+
+if [ -z "${CURRENT}" ]; then
+    echo "Failed to find current version, bailing!"
+    exit 1
+fi
 
 if [ "${CURRENT}" == "${LATEST}" ]; then
     echo "No change in version, quitting."
@@ -69,8 +74,8 @@ fi
 
 echo "Updating file"
 # updates the file
-sed -i -E "s/version \\\".*/version \"${LATEST}\"/g" "${SPECFILE}"
-sed -i -E "s/sha256 \\\".*/sha256 \"${FILEHASH}\"/g" "${SPECFILE}"
+sed -i'' -E "s/version \\\".*/version \"${LATEST}\"/g" "${SPECFILE}"
+sed -i'' -E "s/sha256 \\\".*/sha256 \"${FILEHASH}\"/g" "${SPECFILE}"
 
 DIFF_LINES="$(git diff | wc -l)"
 if [ "${DIFF_LINES}" -ne 0 ]; then
