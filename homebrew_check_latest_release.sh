@@ -19,18 +19,20 @@ else
     echo "SPECFILE: ${SPECFILE}"
 fi
 
+LATEST="$(get_latest_release "https://api.github.com/repos/kanidm/kanidm/releases")"
+
 # grab the update url from the spec file
-URL=$(grep -E homepage "${SPECFILE}" | awk '{print $NF}' | tr -d '"')
-if [ -z "${URL}" ]; then
-    echo "Failed to find check URL, bailing!"
-    exit 1
-else
-    echo "Check URL: ${URL}"
-fi
+# URL=$(grep -E homepage "${SPECFILE}" | awk '{print $NF}' | tr -d '"')
+# if [ -z "${URL}" ]; then
+#     echo "Failed to find check URL, bailing!"
+#     exit 1
+# else
+#     echo "Check URL: ${URL}"
+# fi
 
 
 # pull the latest version
-LATEST="$(curl -sL "${URL}" | jq -r '.tag_name')"
+# LATEST="$(curl -sL "${URL}" | jq -r '.tag_name')"
 if [ -z "${LATEST}" ]; then
     echo "Failed to find latest version, bailing!"
     exit 1
@@ -74,8 +76,8 @@ fi
 
 echo "Updating file"
 # updates the file
-sed -i'' -E "s/version \\\".*/version \"${LATEST}\"/g" "${SPECFILE}"
-sed -i'' -E "s/sha256 \\\".*/sha256 \"${FILEHASH}\"/g" "${SPECFILE}"
+sed -i '' -E "s/version \\\".*/version \"${LATEST}\"/g" "${SPECFILE}"
+sed -i '' -E "s/sha256 \\\".*/sha256 \"${FILEHASH}\"/g" "${SPECFILE}"
 
 DIFF_LINES="$(git diff | wc -l)"
 if [ "${DIFF_LINES}" -ne 0 ]; then
